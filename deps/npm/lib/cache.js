@@ -823,7 +823,15 @@ function addNameVersion (name, v, data, cb) {
           if (er && er.code !== "ENOENT" && er.code !== "ENOTDIR")
             return cb(er)
           if (er) return fetchit()
-          return cb(null, data)
+          if (!dist.shasum) {
+            return cb(null, data)
+          }
+          // check the SHA of the package we have, to ensure it wasn't installed
+          // from somewhere other than the registry (eg, a fork)
+          sha.check(pkgtgz, dist.shasum, function (er) {
+            if (er) return fetchit()
+            return cb(null, data)
+          })
         })
       } else return fetchit()
     })
